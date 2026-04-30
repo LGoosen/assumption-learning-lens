@@ -2,7 +2,6 @@ import { Routes, Route } from 'react-router-dom';
 
 import Layout from './components/Layout.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
-import ComingSoon from './components/ComingSoon.jsx';
 
 import LoginPage from './pages/LoginPage.jsx';
 import PrivacyPage from './pages/PrivacyPage.jsx';
@@ -19,6 +18,10 @@ import StaffClassSummary from './pages/staff/StaffClassSummary.jsx';
 import StaffReflection from './pages/staff/StaffReflection.jsx';
 
 import ManagementDashboard from './pages/management/ManagementDashboard.jsx';
+import FeedbackCyclesPage from './pages/management/FeedbackCyclesPage.jsx';
+import QuestionSetsPage from './pages/management/QuestionSetsPage.jsx';
+import ReportsPage from './pages/management/ReportsPage.jsx';
+import SettingsPage from './pages/management/SettingsPage.jsx';
 
 import { ROLES } from './utils/constants.js';
 
@@ -82,8 +85,6 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-      {/* The "Class Summary" sidebar link lands on the dashboard,
-          which lists classes; specific class summary lives at /:classId. */}
       <Route
         path="/staff/summary"
         element={
@@ -130,7 +131,15 @@ export default function App() {
         path="/management/cycles"
         element={
           <ProtectedRoute allowedRoles={[ROLES.MANAGEMENT]}>
-            <Layout><ComingSoon title="Feedback Cycles" phase="Phase 4" /></Layout>
+            <Layout><FeedbackCyclesPage /></Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/management/questions"
+        element={
+          <ProtectedRoute allowedRoles={[ROLES.MANAGEMENT]}>
+            <Layout><QuestionSetsPage /></Layout>
           </ProtectedRoute>
         }
       />
@@ -138,7 +147,7 @@ export default function App() {
         path="/management/reports"
         element={
           <ProtectedRoute allowedRoles={[ROLES.MANAGEMENT]}>
-            <Layout><ComingSoon title="Reports" phase="Phase 4" /></Layout>
+            <Layout><ReportsPage /></Layout>
           </ProtectedRoute>
         }
       />
@@ -146,7 +155,7 @@ export default function App() {
         path="/management/settings"
         element={
           <ProtectedRoute allowedRoles={[ROLES.MANAGEMENT]}>
-            <Layout><ComingSoon title="Admin Settings" phase="Phase 4" /></Layout>
+            <Layout><SettingsPage /></Layout>
           </ProtectedRoute>
         }
       />

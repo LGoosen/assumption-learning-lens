@@ -21,8 +21,16 @@ import {
   SUBMISSION_REMINDER,
 } from '../../utils/constants.js';
 import { moderateAllComments } from '../../utils/moderation.js';
-import { FEEDBACK_CYCLES } from '../../data/mockData.js';
-import { createSubmission, findExistingSubmission } from '../../utils/storage.js';
+import { listCycles } from '../../utils/cycles.js';
+import {
+  DEFAULT_SET_ID,
+  getQuestionSet,
+  snapshotForSubmission,
+} from '../../utils/questionSets.js';
+import {
+  createSubmission,
+  findExistingSubmission,
+} from '../../utils/storage.js';
 
 const STEPS = ['choose', 'questions', 'review'];
 
@@ -30,26 +38,68 @@ export default function StudentFeedbackForm() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const openCycles = useMemo(
-    () => FEEDBACK_CYCLES.filter((c) => c.status === 'open'),
-    []
-  );
-  const defaultCycleId = openCycles[0]?.id || '';
+  const [openCycles, setOpenCycles] = useState([]);
+  const [cycleId, setCycleId] = useState('');
+  const [subject, setSubject] = useState('');
+  const [questionSet, setQuestionSet] = useState(null);
 
   const [step, setStep] = useState('choose');
-  const [cycleId, setCycleId] = useState(defaultCycleId);
-  const [subject, setSubject] = useState('');
-  const [responses, setResponses] = useState({}); // likert answers
-  const [commentResponses, setCommentResponses] = useState({}); // comment answers
+  const [responses, setResponses] = useState({});
+  const [commentResponses, setCommentResponses] = useState({});
   const [moderationByQuestion, setModerationByQuestion] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [duplicateNote, setDuplicateNote] = useState(null);
 
-  const cycle = openCycles.find((c) => c.id === cycleId);
-  const questions = isYoungerGrade(user?.grade) ? QUESTIONS_YOUNGER : QUESTIONS_OLDER;
+  // Load open cycles on mount
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      const all = await listCycles();
+      const open = all.filter((c) => c.status === 'open');
+      if (cancelled) return;
+      setOpenCycles(open);
+      if (open[0]) setCycleId(open[0].id);
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  // If the student has already submitted for this (cycle, subject), warn them.
+  const cycle = openCycles.find((c) => c.id === cycleId);
+
+  // Whenever the chosen cycle changes, load its question set.
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      if (!cycle) {
+        setQuestionSet(null);
+        return;
+      }
+      const setId = cycle.questionSetId || DEFAULT_SET_ID;
+      const set = await getQuestionSet(setId);
+      if (cancelled) return;
+      setQuestionSet(set);
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [cycle]);
+
+  const isYounger = isYoungerGrade(user?.grade);
+  const questions = useMemo(() => {
+    if (questionSet) {
+      return {
+        likert: isYounger ? questionSet.likertYounger : questionSet.likertOlder,
+        comments: isYounger ? questionSet.commentsYounger : questionSet.commentsOlder,
+      };
+    }
+    return isYounger ? QUESTIONS_YOUNGER : QUESTIONS_OLDER;
+  }, [questionSet, isYounger]);
+
+  // Duplicate-submission guard
   useEffect(() => {
     let cancelled = false;
     async function check() {
@@ -77,7 +127,7 @@ export default function StudentFeedbackForm() {
   }, [user?.uid, cycleId, subject]);
 
   const subjectsForUser = user?.subjects?.length ? user.subjects : SUBJECTS;
-  const allLikertAnswered = questions.likert.every(
+  const allLikertAnswered = (questions.likert || []).every(
     (q) => typeof responses[q.id] === 'number'
   );
   const anyCommentFlagged = Object.values(moderationByQuestion).some(
@@ -126,8 +176,6 @@ export default function StudentFeedbackForm() {
 
   const handleSubmit = async () => {
     setError(null);
-
-    // Final moderation pass on submit (defensive — the live one runs on every keystroke).
     const finalMod = moderateAllComments(commentResponses);
     if (finalMod.overallStatus === 'flagged') {
       setError(
@@ -144,17 +192,19 @@ export default function StudentFeedbackForm() {
 
     try {
       setSubmitting(true);
+      const snapshot = questionSet
+        ? snapshotForSubmission(questionSet, isYounger)
+        : null;
       const saved = await createSubmission({
         cycleId,
         studentId: user.uid,
         grade: user.grade || '',
         subject,
-        // teacherId would come from a class roster lookup in production.
-        // TODO (future): Map (subject, grade) -> teacherId via Firestore lookup or Cloud Function.
         teacherId: '',
         responses,
         commentResponses,
         moderationStatus: 'clean',
+        questionSetSnapshot: snapshot,
       });
       navigate('/student/feedback/confirmation', {
         replace: true,
@@ -396,7 +446,7 @@ function QuestionsStep({
     <>
       <Card title="How is your learning going?" icon={Sparkles}>
         <div className="space-y-7">
-          {questions.likert.map((q) => (
+          {(questions.likert || []).map((q) => (
             <LikertScale
               key={q.id}
               questionId={q.id}
@@ -413,7 +463,7 @@ function QuestionsStep({
         subtitle="Optional — but very helpful when they're specific and kind."
       >
         <div className="space-y-6">
-          {questions.comments.map((q) => (
+          {(questions.comments || []).map((q) => (
             <CommentField
               key={q.id}
               questionId={q.id}
@@ -473,7 +523,7 @@ function ReviewStep({
 
         <h3 className="text-sm font-semibold text-navy-900 mt-2 mb-2">Your scale answers</h3>
         <ul className="space-y-2">
-          {questions.likert.map((q) => (
+          {(questions.likert || []).map((q) => (
             <li key={q.id} className="flex items-start gap-3">
               <span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-navy-50 text-navy-800 text-sm font-semibold shrink-0">
                 {responses[q.id] ?? '–'}
@@ -485,7 +535,7 @@ function ReviewStep({
 
         <h3 className="text-sm font-semibold text-navy-900 mt-6 mb-2">Your comments</h3>
         <ul className="space-y-3">
-          {questions.comments.map((q) => {
+          {(questions.comments || []).map((q) => {
             const text = (commentResponses[q.id] || '').trim();
             return (
               <li key={q.id}>

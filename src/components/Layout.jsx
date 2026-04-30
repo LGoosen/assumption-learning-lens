@@ -9,6 +9,7 @@ import {
   CalendarRange,
   FileBarChart2,
   Settings,
+  ListChecks,
   LogOut,
   Menu,
   X,
@@ -20,11 +21,7 @@ import { ROLE_LABELS } from '../utils/constants.js';
 const NAV_BY_ROLE = {
   student: [
     { to: '/student/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    {
-      to: '/student/feedback',
-      label: 'Give Feedback',
-      icon: MessageSquareHeart,
-    },
+    { to: '/student/feedback', label: 'Give Feedback', icon: MessageSquareHeart },
     { to: '/student/reflections', label: 'My Reflections', icon: NotebookPen },
     { to: '/privacy', label: 'Privacy', icon: ShieldCheck },
   ],
@@ -37,6 +34,7 @@ const NAV_BY_ROLE = {
   management: [
     { to: '/management/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/management/cycles', label: 'Feedback Cycles', icon: CalendarRange },
+    { to: '/management/questions', label: 'Question Sets', icon: ListChecks },
     { to: '/management/reports', label: 'Reports', icon: FileBarChart2 },
     { to: '/management/settings', label: 'Settings', icon: Settings },
     { to: '/privacy', label: 'Privacy', icon: ShieldCheck },
@@ -92,11 +90,7 @@ export default function Layout({ children }) {
             aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
             className="p-2 rounded-md text-navy-800 hover:bg-stone-50"
           >
-            {mobileOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
-            )}
+            {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </header>
 
@@ -129,8 +123,7 @@ export default function Layout({ children }) {
         </main>
 
         <footer className="px-6 py-4 text-center text-xs text-stone-400 no-print">
-          Assumption Learning Lens · Student voice for learning, not
-          surveillance.
+          Assumption Learning Lens · Student voice for learning, not surveillance.
         </footer>
       </div>
     </div>
@@ -140,9 +133,7 @@ export default function Layout({ children }) {
 function UserPanel({ user, onSignOut, compact = false }) {
   if (!user) return null;
   return (
-    <div
-      className={`px-4 ${compact ? 'py-2' : 'py-4'} border-t border-stone-100`}
-    >
+    <div className={`px-4 ${compact ? 'py-2' : 'py-4'} border-t border-stone-100`}>
       <div className="flex items-center gap-3 mb-3">
         <div
           className="w-9 h-9 rounded-full bg-navy-800 text-ivory-100 flex items-center justify-center text-sm font-semibold"

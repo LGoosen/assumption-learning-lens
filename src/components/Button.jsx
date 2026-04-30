@@ -1,10 +1,9 @@
-export default function Button({
-  variant = 'primary',
-  type = 'button',
-  className = '',
-  children,
-  ...rest
-}) {
+import { forwardRef } from 'react';
+
+const Button = forwardRef(function Button(
+  { variant = 'primary', type = 'button', className = '', children, ...rest },
+  ref
+) {
   const base =
     variant === 'primary'
       ? 'btn-primary'
@@ -12,8 +11,10 @@ export default function Button({
       ? 'btn-gold'
       : 'btn-secondary';
   return (
-    <button type={type} className={`${base} ${className}`} {...rest}>
+    <button ref={ref} type={type} className={`${base} ${className}`} {...rest}>
       {children}
     </button>
   );
-}
+});
+
+export default Button;

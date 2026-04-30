@@ -12,7 +12,6 @@ export const ROLE_LABELS = {
   management: 'Management',
 };
 
-// 1–5 Likert scale per the brief
 export const LIKERT_OPTIONS = [
   { value: 1, label: 'Not yet' },
   { value: 2, label: 'A little' },
@@ -21,7 +20,6 @@ export const LIKERT_OPTIONS = [
   { value: 5, label: 'Strongly' },
 ];
 
-// Determine whether a learner gets the younger or older question set.
 export function isYoungerGrade(grade) {
   const n = Number(String(grade).replace(/\D/g, ''));
   if (Number.isNaN(n)) return true;
@@ -59,6 +57,10 @@ export const QUESTIONS_OLDER = {
 };
 
 export const SUBJECTS = ['Mathematics', 'English', 'Life Sciences', 'History'];
+
+export const ALL_GRADES = ['8', '9', '10', '11', '12'];
+
+export const CYCLE_STATUSES = ['draft', 'open', 'closed'];
 
 export const SUBMISSION_REMINDER =
   'Feedback should help learning improve. Be honest, kind, specific, and respectful.';

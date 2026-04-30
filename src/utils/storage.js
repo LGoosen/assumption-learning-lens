@@ -4,11 +4,7 @@
 //   1) Firebase configured  -> reads/writes go to Firestore
 //   2) Demo mode (no env)   -> reads/writes go to localStorage
 //
-// Components shouldn't care which mode they're in. They just call these
-// helpers and get the same shape of data back.
-//
-// Firestore is the source of truth in production. Demo mode is for
-// classroom testing, StackBlitz preview, and prototype review.
+// Components shouldn't care which mode they're in.
 
 import {
     collection,
@@ -82,13 +78,6 @@ import {
       .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
   }
   
-  /**
-   * Submissions for a class within a specific cycle.
-   * In V1 we filter by (cycleId, subject, grade) — the closest demo equivalent
-   * of "this teacher's class in this cycle" without a class roster table.
-   *
-   * TODO (future): Once class rosters exist, key this on classId directly.
-   */
   export async function getSubmissionsForClass({ cycleId, subject, grade }) {
     if (!cycleId || !subject) return [];
   
@@ -115,12 +104,27 @@ import {
     );
   }
   
+  export async function getSubmissionsForCycle(cycleId) {
+    if (!cycleId) return [];
+    if (firebaseEnabled && db) {
+      const q = query(collection(db, 'submissions'), where('cycleId', '==', cycleId));
+      const snap = await getDocs(q);
+      return snap.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+        createdAt: toIso(d.data().createdAt),
+      }));
+    }
+    return loadDemoSubmissions().filter((s) => s.cycleId === cycleId);
+  }
+  
   export async function findExistingSubmission({ studentId, cycleId, subject }) {
     const all = await getSubmissionsForStudent(studentId);
     return all.find((s) => s.cycleId === cycleId && s.subject === subject) || null;
   }
   
   export async function createSubmission(payload) {
+    // questionSetSnapshot makes "past submissions stay as they were" honest.
     const data = {
       cycleId: payload.cycleId,
       studentId: payload.studentId,
@@ -130,6 +134,7 @@ import {
       responses: payload.responses || {},
       commentResponses: payload.commentResponses || {},
       moderationStatus: payload.moderationStatus || 'clean',
+      questionSetSnapshot: payload.questionSetSnapshot || null,
     };
   
     if (firebaseEnabled && db) {
