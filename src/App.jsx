@@ -10,6 +10,10 @@ import RoleRedirect from './pages/RoleRedirect.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
 
 import StudentDashboard from './pages/student/StudentDashboard.jsx';
+import StudentFeedbackForm from './pages/student/StudentFeedbackForm.jsx';
+import StudentSubmissionConfirmation from './pages/student/StudentSubmissionConfirmation.jsx';
+import StudentReflections from './pages/student/StudentReflections.jsx';
+
 import StaffDashboard from './pages/staff/StaffDashboard.jsx';
 import ManagementDashboard from './pages/management/ManagementDashboard.jsx';
 
@@ -45,15 +49,7 @@ export default function App() {
         path="/student/feedback"
         element={
           <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
-            <Layout><ComingSoon title="Give Feedback" phase="Phase 2" /></Layout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/student/feedback/:cycleId"
-        element={
-          <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
-            <Layout><ComingSoon title="Feedback Form" phase="Phase 2" /></Layout>
+            <Layout><StudentFeedbackForm /></Layout>
           </ProtectedRoute>
         }
       />
@@ -61,7 +57,7 @@ export default function App() {
         path="/student/feedback/confirmation"
         element={
           <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
-            <Layout><ComingSoon title="Submission Confirmed" phase="Phase 2" /></Layout>
+            <Layout><StudentSubmissionConfirmation /></Layout>
           </ProtectedRoute>
         }
       />
@@ -69,7 +65,7 @@ export default function App() {
         path="/student/reflections"
         element={
           <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
-            <Layout><ComingSoon title="My Reflections" phase="Phase 2" /></Layout>
+            <Layout><StudentReflections /></Layout>
           </ProtectedRoute>
         }
       />
