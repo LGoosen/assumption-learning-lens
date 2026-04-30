@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-ivory-50 text-navy-800 font-sans;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-serif text-navy-900;
+  }
+
+  /* Visible focus ring for keyboard users */
+  :focus-visible {
+    @apply outline-none ring-2 ring-gold-500 ring-offset-2 ring-offset-ivory-50 rounded-md;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-xl2 shadow-card border border-stone-100 p-6;
+  }
+
+  .pill {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+
+  .nav-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-navy-700 hover:bg-navy-50 transition-colors;
+  }
+
+  .nav-link-active {
+    @apply bg-navy-800 text-white hover:bg-navy-800;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg
+           bg-navy-800 text-white font-medium shadow-soft
+           hover:bg-navy-700 active:bg-navy-900
+           disabled:opacity-50 disabled:cursor-not-allowed
+           transition-colors;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg
+           bg-white border border-stone-200 text-navy-800 font-medium
+           hover:bg-stone-50 active:bg-stone-100
+           disabled:opacity-50 disabled:cursor-not-allowed
+           transition-colors;
+  }
+
+  .btn-gold {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg
+           bg-gold-500 text-white font-medium shadow-soft
+           hover:bg-gold-600 active:bg-gold-600
+           disabled:opacity-50 disabled:cursor-not-allowed
+           transition-colors;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2.5 rounded-lg border border-stone-200
+           bg-white text-navy-900 placeholder:text-stone-400
+           focus:border-navy-400 focus:ring-2 focus:ring-navy-200
+           transition-colors;
+  }
+}
+
+/* Print styles for management report export */
+@media print {
+  nav, .no-print { display: none !important; }
+  body { background: white; }
+  .card { box-shadow: none; border: 1px solid #ddd; }
+}
