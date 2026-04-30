@@ -15,6 +15,9 @@ import StudentSubmissionConfirmation from './pages/student/StudentSubmissionConf
 import StudentReflections from './pages/student/StudentReflections.jsx';
 
 import StaffDashboard from './pages/staff/StaffDashboard.jsx';
+import StaffClassSummary from './pages/staff/StaffClassSummary.jsx';
+import StaffReflection from './pages/staff/StaffReflection.jsx';
+
 import ManagementDashboard from './pages/management/ManagementDashboard.jsx';
 
 import { ROLES } from './utils/constants.js';
@@ -79,11 +82,13 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+      {/* The "Class Summary" sidebar link lands on the dashboard,
+          which lists classes; specific class summary lives at /:classId. */}
       <Route
         path="/staff/summary"
         element={
           <ProtectedRoute allowedRoles={[ROLES.STAFF]}>
-            <Layout><ComingSoon title="Class Summary" phase="Phase 3" /></Layout>
+            <Layout><StaffDashboard /></Layout>
           </ProtectedRoute>
         }
       />
@@ -91,7 +96,7 @@ export default function App() {
         path="/staff/summary/:classId"
         element={
           <ProtectedRoute allowedRoles={[ROLES.STAFF]}>
-            <Layout><ComingSoon title="Class Summary" phase="Phase 3" /></Layout>
+            <Layout><StaffClassSummary /></Layout>
           </ProtectedRoute>
         }
       />
@@ -99,7 +104,15 @@ export default function App() {
         path="/staff/reflection"
         element={
           <ProtectedRoute allowedRoles={[ROLES.STAFF]}>
-            <Layout><ComingSoon title="Teacher Reflection" phase="Phase 3" /></Layout>
+            <Layout><StaffReflection /></Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/staff/reflection/:classId"
+        element={
+          <ProtectedRoute allowedRoles={[ROLES.STAFF]}>
+            <Layout><StaffReflection /></Layout>
           </ProtectedRoute>
         }
       />
