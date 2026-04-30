@@ -1,0 +1,142 @@
+rules_version = '2';
+
+// Assumption Learning Lens — Firestore Security Rules
+//
+// Defaults: deny everything. Each collection then declares its narrow,
+// role-based read and write paths.
+//
+// Trust model:
+//   - "users/{uid}" stores each user's role. Role is set once on first sign-in
+//     and only Management can change it.
+//   - All role checks read users/{uid}.role server-side via get().
+//
+// What rules CAN'T fully enforce on their own:
+//   - Aggregation. A teacher legitimately needs to compute averages across
+//     submissions, but rules can't grant "read aggregates only" — they grant
+//     read on documents. For V1 we trust the front-end to aggregate and not
+//     display raw comments to staff. For V2, move aggregation to Cloud
+//     Functions and forbid direct read access from clients.
+//   - Rate limiting / abuse. Use App Check + Cloud Functions for that later.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- helpers ----------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc(uid) {
+      return get(/databases/$(database)/documents/users/$(uid));
+    }
+
+    function role() {
+      return userDoc(request.auth.uid).data.role;
+    }
+
+    function isStudent()    { return isSignedIn() && role() == 'student'; }
+    function isStaff()      { return isSignedIn() && role() == 'staff'; }
+    function isManagement() { return isSignedIn() && role() == 'management'; }
+
+    // ---------- users ----------
+    match /users/{uid} {
+      // A user reads only their own profile. Management can read all profiles.
+      allow read: if isSignedIn() && (request.auth.uid == uid || isManagement());
+
+      // First-time create: the user creates their own user doc as 'student'.
+      // (AuthContext does this on first sign-in.)
+      allow create: if isSignedIn()
+                    && request.auth.uid == uid
+                    && request.resource.data.role == 'student';
+
+      // Updates: a user can update their own non-role fields.
+      // Role changes are restricted to Management.
+      allow update: if isSignedIn()
+                    && (
+                      // self update, but role unchanged
+                      (request.auth.uid == uid
+                        && request.resource.data.role == resource.data.role)
+                      ||
+                      // Management can change roles
+                      isManagement()
+                    );
+
+      allow delete: if isManagement();
+    }
+
+    // ---------- feedbackCycles ----------
+    match /feedbackCycles/{cycleId} {
+      // Anyone signed in can read open cycles (so the student form lists them).
+      // Staff and Management can read all cycles.
+      allow read: if isSignedIn();
+
+      // Only Management can create/update/delete cycles.
+      allow create, update, delete: if isManagement();
+    }
+
+    // ---------- questionSets ----------
+    match /questionSets/{setId} {
+      // Question text is shown to students inside the form.
+      allow read: if isSignedIn();
+
+      // Only Management can change question sets.
+      allow create, update, delete: if isManagement();
+    }
+
+    // ---------- submissions ----------
+    match /submissions/{submissionId} {
+      // A student creates their own submission only.
+      allow create: if isStudent()
+                    && request.resource.data.studentId == request.auth.uid;
+
+      // A student reads their own submission. Staff and Management can read
+      // submissions to compute aggregates. (See "What rules can't enforce".)
+      allow read: if isSignedIn() && (
+        resource.data.studentId == request.auth.uid
+        || isStaff()
+        || isManagement()
+      );
+
+      // Submissions are immutable from clients in V1. (Edit-by-deleting flow
+      // can be added later, gated by Cloud Functions if needed.)
+      allow update: if false;
+      allow delete: if isManagement();
+    }
+
+    // ---------- teacherReflections ----------
+    match /teacherReflections/{reflectionId} {
+      // Read: only the owning teacher can see their own reflection.
+      // Management cannot read these — they're the teacher's private space.
+      allow read: if isSignedIn()
+                  && resource.data.teacherId == request.auth.uid;
+
+      // Create/update: only the owning teacher can write to their reflection.
+      allow create, update: if isStaff()
+                            && request.resource.data.teacherId == request.auth.uid;
+
+      allow delete: if isSignedIn()
+                    && resource.data.teacherId == request.auth.uid;
+    }
+
+    // ---------- reviewedSummaries ----------
+    match /reviewedSummaries/{summaryId} {
+      // Read: signed-in users can read. The UI then shows the summary only to
+      // the relevant staff member and to Management. (Strictly enforcing "only
+      // the right teacher reads it" requires a teacherId field on every summary
+      // and a class roster — added in V2 with Cloud Functions.)
+      allow read: if isSignedIn();
+
+      // Create/update/delete: only Management.
+      allow create, update, delete: if isManagement();
+    }
+
+    // ---------- settings ----------
+    match /settings/{docId} {
+      // Read: signed-in users (e.g. so the UI can hide raw comments by default).
+      allow read: if isSignedIn();
+
+      // Write: Management only.
+      allow create, update, delete: if isManagement();
+    }
+  }
+}

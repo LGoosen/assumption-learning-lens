@@ -10,6 +10,7 @@ import {
   FileBarChart2,
   Settings,
   ListChecks,
+  ClipboardCheck,
   LogOut,
   Menu,
   X,
@@ -35,6 +36,7 @@ const NAV_BY_ROLE = {
     { to: '/management/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/management/cycles', label: 'Feedback Cycles', icon: CalendarRange },
     { to: '/management/questions', label: 'Question Sets', icon: ListChecks },
+    { to: '/management/reviewed-summaries', label: 'Reviewed Summaries', icon: ClipboardCheck },
     { to: '/management/reports', label: 'Reports', icon: FileBarChart2 },
     { to: '/management/settings', label: 'Settings', icon: Settings },
     { to: '/privacy', label: 'Privacy', icon: ShieldCheck },
@@ -62,7 +64,7 @@ export default function Layout({ children }) {
         <div className="px-6 py-5 border-b border-stone-100">
           <Logo />
         </div>
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => (
             <NavLink
               key={item.to}

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   FileBarChart2,
   Download,
@@ -6,6 +7,7 @@ import {
   ShieldCheck,
   Sparkles,
   TriangleAlert,
+  ClipboardCheck,
 } from 'lucide-react';
 import {
   BarChart,
@@ -21,10 +23,7 @@ import Card from '../../components/Card.jsx';
 import Button from '../../components/Button.jsx';
 import { listCycles } from '../../utils/cycles.js';
 import { getSubmissionsForCycle } from '../../utils/storage.js';
-import {
-  computeLikertAverages,
-  buildClassSummary,
-} from '../../utils/aggregation.js';
+import { computeLikertAverages } from '../../utils/aggregation.js';
 import { downloadCsv } from '../../utils/csv.js';
 import { MOCK_MANAGEMENT_TRENDS } from '../../data/mockData.js';
 
@@ -40,7 +39,6 @@ export default function ReportsPage() {
       const all = await listCycles();
       if (cancelled) return;
       setCycles(all);
-      // Default to the most recent open or closed cycle.
       const preferred =
         all.find((c) => c.status === 'open') ||
         all.find((c) => c.status === 'closed') ||
@@ -73,7 +71,6 @@ export default function ReportsPage() {
 
   const cycle = cycles.find((c) => c.id === cycleId);
 
-  // Build report data, falling back to seeded trends when there's no real data yet.
   const report = useMemo(() => {
     if (!cycle) return null;
     return buildReport({ cycle, submissions });
@@ -146,6 +143,19 @@ export default function ReportsPage() {
           </Button>
         </div>
       </header>
+
+      <div className="rounded-lg border border-stone-200 bg-stone-50 px-4 py-3 flex items-start gap-3 no-print">
+        <ClipboardCheck className="w-5 h-5 text-navy-700 shrink-0 mt-0.5" aria-hidden="true" />
+        <div className="flex-1">
+          <p className="text-navy-900 text-sm">
+            <strong>Reviewed Summaries</strong> is where you publish a human-reviewed summary
+            per class, after using your AI tool of choice. Staff see only what you save.
+          </p>
+        </div>
+        <Link to="/management/reviewed-summaries" className="btn-secondary">
+          Open
+        </Link>
+      </div>
 
       {loading || !report ? (
         <Card><p className="text-stone-400">Loading…</p></Card>
@@ -281,17 +291,14 @@ function Stat({ label, value }) {
   );
 }
 
-// ----------- report builder -----------
 function buildReport({ cycle, submissions }) {
   const responded = submissions.length;
   const total = Math.max(responded, MOCK_MANAGEMENT_TRENDS.participation.total);
   const percent = total > 0 ? Math.round((responded / total) * 100) : 0;
   const isLive = responded > 0;
 
-  // Question-level averages (real if data exists, otherwise none).
   const likertAverages = computeLikertAverages(submissions);
 
-  // Grade trends — average of per-question averages by grade.
   const gradeTrends = isLive
     ? buildGradeTrends(submissions)
     : MOCK_MANAGEMENT_TRENDS.gradeTrends.map((g) => ({
@@ -299,7 +306,6 @@ function buildReport({ cycle, submissions }) {
         average: avg([g.clarity, g.pace, g.feedback, g.future, g.ownership]),
       }));
 
-  // Subject trends.
   const subjectTrends = isLive
     ? buildSubjectTrends(submissions)
     : MOCK_MANAGEMENT_TRENDS.subjectTrends.map((s) => ({

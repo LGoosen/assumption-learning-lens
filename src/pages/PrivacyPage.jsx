@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, ArrowRight } from 'lucide-react';
 import Logo from '../components/Logo.jsx';
 import Card from '../components/Card.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -58,15 +58,22 @@ export default function PrivacyPage() {
 
           <Card title="How AI summaries are used">
             <p className="text-navy-800 mb-2">
-              The system can generate draft summaries from student feedback to help teachers reflect.
-              These are <strong>suggestions, not verdicts</strong>. Every summary is reviewed by a person
-              before it influences any decision.
+              The system can help management generate <strong>draft</strong> summaries from student
+              feedback to support teacher reflection. These are <strong>suggestions, not verdicts</strong>.
+              Every summary is reviewed by a person before it influences any decision.
             </p>
             <ul className="space-y-2 text-navy-800">
               <li>AI is asked to focus on patterns, not isolated comments.</li>
               <li>AI is told not to rank or blame, and to flag low sample sizes.</li>
-              <li>No AI keys are exposed to your browser; AI calls happen server-side.</li>
+              <li>For V1, AI is used <em>manually</em> by management via NotebookLM or a Gemini Gem — student data is not sent automatically.</li>
             </ul>
+            <Link
+              to="/ai-workflow"
+              className="inline-flex items-center gap-1.5 text-navy-700 hover:text-navy-900 mt-3 text-sm"
+            >
+              Read the AI workflow guide
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </Card>
 
           <Card title="Comment guardrails">
